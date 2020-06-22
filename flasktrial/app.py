@@ -12,7 +12,7 @@ from flask_login import LoginManager, UserMixin, login_required, login_user, cur
 app = Flask(__name__)
 
 app.config['SECRET_KEY'] = 'thisisforever'
-app.config['SQLALCHEMY_DATABASE_URI'] = ''
+app.config['SQLALCHEMY_DATABASE_URI'] = 
 app.config['SQLALCHEMY_TRACK_MODIFICATION'] = False
 login_manager = LoginManager(app)
 login_manager.login_view = 'Login'
@@ -118,21 +118,35 @@ def Login():
             login_user(user)
             return redirect(url_for('profile'))
         else:
-            flash('Login unsuccessful, check to make sure all info are correct')
+            return redirect(url_for('Register'))
     return render_template('login.html', form=form)
 
-@app.route('/<username>')
+@app.route('/profile', defaults={'username': None})
+@app.route('/profile/<username>')
 @login_required
 def profile(username):
     
     if username:
         user= User.query.filter_by(username=username).first()
-        if not:
+        if user is None:
             abort(404)
     else:
         user = current_user
     returns = Return.query.filter_by(user=user).order_by(Return.date.desc()).paginate(page=page, per_page=10).first()
     return render_template('profile.html', current_user=current_user, returns=returns)
+
+@app.route("/returnfill")
+@login_required
+def returnfill():
+    form = ReturnForm()
+
+    if form.validate_on_submit():
+        new_return = Return(user_id=current_user.id, name=form.name.data, ra=form.ra.data, date= datetime.now(), color= form.color.data, style=form.style.data, size=form.size.data, reason=form.reason.data)
+        db.session.add(new_return)
+        db.session.commit()
+
+    return render_template('returnfill.html')
+    
 
 @app.route("/logout")
 @login_required
